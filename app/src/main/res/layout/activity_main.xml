@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout ... >
+  <!-- use the same layout content from the previous message (status, buttons: Start Focus, Stop Focus, Settings) -->
+</androidx.constraintlayout.widget.ConstraintLayout>
