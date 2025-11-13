@@ -1,7 +1,7 @@
 name: Focus
 
 on:
-  workflow_dispatch: # run manually via button
+  workflow_dispatch: # run manually
 
 jobs:
   build:
@@ -18,42 +18,46 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: ⚡ Check and Setup Gradle Wrapper
+      - name: ⚙️ Verify Gradle Wrapper
         run: |
           echo "🔍 Checking Gradle wrapper files..."
 
-          if [ ! -f "./gradlew" ]; then
-            echo "⚠️ gradlew not found! Creating Gradle wrapper..."
-            gradle wrapper
+          # Ensure wrapper directory exists
+          mkdir -p gradle/wrapper
+
+          # Detect Gradle version from gradle-wrapper.properties
+          if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
+            GRADLE_VERSION=$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-\(.*\)-bin.zip/\1/')
+            echo "📦 Detected Gradle version: $GRADLE_VERSION"
+          else
+            echo "⚠️ gradle-wrapper.properties not found, using Gradle 8.10"
+            GRADLE_VERSION=8.10
           fi
 
-          if [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⚠️ gradle-wrapper.jar missing! Downloading latest verified version..."
-            mkdir -p gradle/wrapper
-
-            # Download directly from Gradle's Maven repo
+          # Download correct gradle-wrapper.jar from Gradle repo
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "⬇️ gradle-wrapper.jar missing! Downloading version $GRADLE_VERSION ..."
             curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
-              https://repo.gradle.org/gradle/libs-releases-local/org/gradle/gradle-wrapper/8.10/gradle-wrapper-8.10.jar
+              "https://repo.gradle.org/gradle/libs-releases-local/org/gradle/gradle-wrapper/$GRADLE_VERSION/gradle-wrapper-$GRADLE_VERSION.jar"
+          fi
 
-            if [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
-              echo "❌ Failed to download gradle-wrapper.jar!"
-              exit 1
-            fi
-            echo "✅ gradle-wrapper.jar downloaded successfully."
-          else
-            echo "✅ Gradle wrapper already present."
+          if [ ! -f "./gradlew" ]; then
+            echo "⚠️ gradlew script missing — generating..."
+            gradle wrapper --gradle-version "$GRADLE_VERSION"
           fi
 
           chmod +x gradlew
+          echo "✅ Gradle wrapper setup complete."
 
-      - name: 🏗️ Build with Gradle
+      - name: 🏗️ Build APK
         run: ./gradlew assembleDebug --stacktrace
 
       - name: 🧪 Run Unit Tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: 📦 Upload APK (Artifact)
+      - name: 📦 Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: focus-debug-apk
+          name: Focus-v4-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
