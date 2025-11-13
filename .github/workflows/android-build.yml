@@ -1,7 +1,7 @@
 name: Focus
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch: # Manual run only
 
 jobs:
   build:
@@ -18,13 +18,13 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: ⚙️ Verify and Repair Gradle Wrapper
+      - name: ⚙️ Verify & Fix Gradle Wrapper
         run: |
           echo "🔍 Checking Gradle wrapper files..."
 
           mkdir -p gradle/wrapper
 
-          # Detect Gradle version
+          # Detect version or default to 8.10
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             GRADLE_VERSION=$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-\(.*\)-bin.zip/\1/')
             echo "📦 Detected Gradle version: $GRADLE_VERSION"
@@ -33,13 +33,21 @@ jobs:
             GRADLE_VERSION=8.10
           fi
 
-          # If wrapper jar is missing or corrupted, fix it
+          # If the wrapper jar is missing, repair it
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⬇️ gradle-wrapper.jar missing! Extracting from Gradle distribution..."
+            echo "⬇️ gradle-wrapper.jar missing! Downloading Gradle $GRADLE_VERSION..."
             curl -sSL -o gradle.zip "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip"
             unzip -q gradle.zip -d gradle_dist
-            find gradle_dist -name "gradle-wrapper.jar" -exec cp {} gradle/wrapper/gradle-wrapper.jar \;
+            echo "🔍 Searching for gradle-wrapper.jar..."
+            FOUND=$(find gradle_dist -type f -name "gradle-wrapper.jar" | head -n 1)
+            if [ -z "$FOUND" ]; then
+              echo "❌ gradle-wrapper.jar not found in Gradle distribution!"
+              exit 1
+            fi
+            cp "$FOUND" gradle/wrapper/gradle-wrapper.jar
             echo "✅ gradle-wrapper.jar restored successfully."
+          else
+            echo "✅ gradle-wrapper.jar already exists."
           fi
 
           chmod +x gradlew
