@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: 🤖 Verify & Build Android App
+    name: 🤖 Verify & Build Focus App
     runs-on: ubuntu-latest
 
     steps:
@@ -22,15 +22,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: 🧠 Verify Gradle Wrapper Files
+      - name: 🔍 Verify & Repair Gradle Wrapper
         shell: bash
         run: |
-          echo "🔍 Checking Gradle wrapper files..."
+          echo "🔎 Checking Gradle wrapper files..."
           mkdir -p gradle/wrapper
 
           # gradlew
           if [ ! -f gradlew ]; then
-            echo "⚙️ gradlew missing — creating..."
+            echo "⚙️ Creating gradlew..."
             cat > gradlew <<'EOF'
 #!/usr/bin/env sh
 set -e
@@ -42,7 +42,7 @@ EOF
 
           # gradlew.bat
           if [ ! -f gradlew.bat ]; then
-            echo "⚙️ gradlew.bat missing — creating..."
+            echo "⚙️ Creating gradlew.bat..."
             cat > gradlew.bat <<'EOF'
 @echo off
 set DIR=%~dp0
@@ -52,7 +52,7 @@ EOF
 
           # gradle-wrapper.properties
           if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
-            echo "⚙️ gradle-wrapper.properties missing — creating..."
+            echo "⚙️ Creating gradle-wrapper.properties..."
             cat > gradle/wrapper/gradle-wrapper.properties <<'EOF'
 distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
@@ -69,9 +69,9 @@ EOF
             (curl -sSL https://services.gradle.org/distributions/gradle-8.10-bin.zip -o gradle-8.10-bin.zip && unzip -j gradle-8.10-bin.zip "*/gradle-wrapper.jar" -d gradle/wrapper)
           fi
 
-          echo "✅ Gradle wrapper verified and ready!"
+          echo "✅ Gradle wrapper verified and ready."
 
-      - name: 🧱 Set up Gradle
+      - name: ⚙️ Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.10
@@ -83,8 +83,21 @@ EOF
       - name: 🧪 Run Unit Tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
+      - name: 🧩 Rename APK with Build Info
+        run: |
+          mkdir -p release_apk
+          APK_FILE=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          if [ -f "$APK_FILE" ]; then
+            NEW_NAME="Focus_v4_build_${{ github.run_number }}.apk"
+            cp "$APK_FILE" "release_apk/$NEW_NAME"
+            echo "✅ Renamed APK → release_apk/$NEW_NAME"
+          else
+            echo "❌ No APK file found!"
+            exit 1
+          fi
+
       - name: 📦 Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FocusApp-v4-Debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: FocusApp-v4
+          path: release_apk/*.apk
