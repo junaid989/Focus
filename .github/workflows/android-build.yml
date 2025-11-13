@@ -23,7 +23,7 @@ jobs:
           echo "🔍 Checking Gradle wrapper files..."
           mkdir -p gradle/wrapper
 
-          # Detect version or default to 8.10
+          # Detect Gradle version or default to 8.10
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             GRADLE_VERSION=$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-\(.*\)-bin.zip/\1/')
             echo "📦 Detected Gradle version: $GRADLE_VERSION"
@@ -32,24 +32,25 @@ jobs:
             GRADLE_VERSION=8.10
           fi
 
-          # Check for existing wrapper JAR
+          # Check if wrapper jar exists
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⬇️ gradle-wrapper.jar missing! Fetching official compiled binary..."
-            curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
-              "https://repo.gradle.org/gradle/libs-releases-local/org/gradle/gradle-wrapper/${GRADLE_VERSION}/gradle-wrapper-${GRADLE_VERSION}.jar"
+            echo "⬇️ gradle-wrapper.jar missing! Downloading Gradle ${GRADLE_VERSION}..."
 
-            # If 404, fallback to default working version (8.7)
-            if [ ! -s "gradle/wrapper/gradle-wrapper.jar" ]; then
-              echo "⚠️ Failed for version ${GRADLE_VERSION}, falling back to 8.7"
-              curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
-                "https://repo.gradle.org/gradle/libs-releases-local/org/gradle/gradle-wrapper/8.7/gradle-wrapper-8.7.jar"
-            fi
+            # Download Gradle distribution zip
+            curl -sSL -o gradle-${GRADLE_VERSION}-bin.zip \
+              https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip
+
+            # Extract only the wrapper jar from it
+            unzip -j gradle-${GRADLE_VERSION}-bin.zip "gradle-${GRADLE_VERSION}/lib/gradle-wrapper.jar" -d gradle/wrapper || {
+              echo "❌ gradle-wrapper.jar not found inside Gradle distribution!"
+              exit 1
+            }
           fi
 
           if [ -s "gradle/wrapper/gradle-wrapper.jar" ]; then
             echo "✅ gradle-wrapper.jar ready."
           else
-            echo "❌ Failed to download gradle-wrapper.jar"
+            echo "❌ gradle-wrapper.jar failed to create!"
             exit 1
           fi
 
@@ -67,4 +68,3 @@ jobs:
         with:
           name: Focus-v4-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-
