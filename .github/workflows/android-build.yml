@@ -21,14 +21,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: ⚙️ Ensure Gradle Wrapper Jar Exists
-        run: |
-          mkdir -p gradle/wrapper
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "⬇️ Downloading gradle-wrapper.jar for Gradle 8.10..."
-            curl -L -o gradle/wrapper/gradle-wrapper.jar \
-              https://raw.githubusercontent.com/gradle/gradle/v8.10/subprojects/wrapper/src/main/resources/gradle/wrapper/gradle-wrapper.jar
-          fi
+    - name: ⚙️ Ensure Gradle Wrapper Jar Exists
+  run: |
+    mkdir -p gradle/wrapper
+    echo "⬇️ Downloading verified Gradle 8.10 wrapper jar..."
+    curl -L -o gradle/wrapper/gradle-wrapper.jar \
+      https://services.gradle.org/distributions/gradle-8.10-bin.zip
+    unzip -p gradle/wrapper/gradle-8.10-bin.zip gradle-8.10/lib/gradle-wrapper.jar > gradle/wrapper/gradle-wrapper.jar
+    rm gradle/wrapper/gradle-8.10-bin.zip
+
 
       - name: 🧹 Grant Execute Permission for gradlew
         run: chmod +x gradlew
