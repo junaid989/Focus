@@ -31,21 +31,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Set up Gradle Wrapper (auto-fix for path)
+      - name: Set up Gradle Wrapper (direct from Maven Central)
         run: |
           mkdir -p gradle/wrapper
-          echo "⬇️ Downloading Gradle 8.10..."
-          curl -sSL https://services.gradle.org/distributions/gradle-8.10-bin.zip -o gradle-8.10-bin.zip
-          unzip -q gradle-8.10-bin.zip -d gradle-temp
-          # Find and copy the gradle-wrapper.jar wherever it exists
-          WRAPPER_PATH=$(find gradle-temp -name "gradle-wrapper.jar" | head -n 1)
-          if [ -z "$WRAPPER_PATH" ]; then
-            echo "❌ gradle-wrapper.jar not found inside Gradle zip!"
-            exit 1
-          fi
-          cp "$WRAPPER_PATH" gradle/wrapper/gradle-wrapper.jar
-          echo "✅ gradle-wrapper.jar copied successfully from $WRAPPER_PATH"
-          rm -rf gradle-temp gradle-8.10-bin.zip
+          echo "⬇️ Downloading verified Gradle 8.10 wrapper jar from Maven Central..."
+          curl -sSL https://repo1.maven.org/maven2/org/gradle/gradle-wrapper/8.10/gradle-wrapper-8.10.jar -o gradle/wrapper/gradle-wrapper.jar
+          echo "✅ gradle-wrapper.jar downloaded successfully!"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
