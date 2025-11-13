@@ -23,7 +23,7 @@ jobs:
           echo "🔍 Checking Gradle wrapper files..."
           mkdir -p gradle/wrapper
 
-          # Detect Gradle version or default to 8.10
+          # Detect Gradle version
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             GRADLE_VERSION=$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-\(.*\)-bin.zip/\1/')
             echo "📦 Detected Gradle version: $GRADLE_VERSION"
@@ -32,19 +32,22 @@ jobs:
             GRADLE_VERSION=8.10
           fi
 
-          # Check if wrapper jar exists
+          # Download and extract wrapper jar if missing
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
             echo "⬇️ gradle-wrapper.jar missing! Downloading Gradle ${GRADLE_VERSION}..."
-
-            # Download Gradle distribution zip
             curl -sSL -o gradle-${GRADLE_VERSION}-bin.zip \
               https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip
 
-            # Extract only the wrapper jar from it
-            unzip -j gradle-${GRADLE_VERSION}-bin.zip "gradle-${GRADLE_VERSION}/lib/gradle-wrapper.jar" -d gradle/wrapper || {
-              echo "❌ gradle-wrapper.jar not found inside Gradle distribution!"
+            echo "📂 Searching for gradle-wrapper.jar inside the zip..."
+            JAR_PATH=$(unzip -l gradle-${GRADLE_VERSION}-bin.zip | grep "gradle-wrapper.jar" | awk '{print $4}' | head -n 1)
+
+            if [ -z "$JAR_PATH" ]; then
+              echo "❌ gradle-wrapper.jar not found in Gradle distribution!"
               exit 1
-            }
+            fi
+
+            echo "📦 Found wrapper jar at: $JAR_PATH"
+            unzip -j gradle-${GRADLE_VERSION}-bin.zip "$JAR_PATH" -d gradle/wrapper
           fi
 
           if [ -s "gradle/wrapper/gradle-wrapper.jar" ]; then
@@ -66,5 +69,6 @@ jobs:
       - name: 📦 Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Focus-v4-debug-apk
+          name: Focus-v5-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
