@@ -1,6 +1,7 @@
-name: Android CI
+name: Android Auto Builder
 
 on:
+  workflow_dispatch: # 👈 Allows you to manually click "Run workflow"
   push:
     branches: [ "main", "master" ]
   pull_request:
@@ -8,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build Android Project
+    name: 🤖 Verify & Build Android App
     runs-on: ubuntu-latest
 
     steps:
@@ -21,20 +22,58 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: ⚙️ Set up Gradle
+      - name: 🧠 Verify Gradle Wrapper Files
+        run: |
+          echo "🔍 Checking Gradle wrapper files..."
+          mkdir -p gradle/wrapper
+
+          # Check gradlew
+          if [ ! -f gradlew ]; then
+            echo "⚙️ gradlew missing — creating..."
+            echo "#!/usr/bin/env sh" > gradlew
+            echo "set -e" >> gradlew
+            echo "DIR=\$(cd \"\$(dirname \"\$0\")\" && pwd)" >> gradlew
+            echo "java -Xmx64m -cp \"\$DIR/gradle/wrapper/gradle-wrapper.jar\" org.gradle.wrapper.GradleWrapperMain \"\$@\"" >> gradlew
+          fi
+
+          # Check gradlew.bat
+          if [ ! -f gradlew.bat ]; then
+            echo "⚙️ gradlew.bat missing — creating..."
+            cat <<EOF > gradlew.bat
+            @echo off
+            set DIR=%~dp0
+            java -Xmx64m -cp "%DIR%gradle\\wrapper\\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain %*
+            EOF
+          fi
+
+          # Check gradle-wrapper.properties
+          if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
+            echo "⚙️ gradle-wrapper.properties missing — creating..."
+            cat <<EOF > gradle/wrapper/gradle-wrapper.properties
+            distributionBase=GRADLE_USER_HOME
+            distributionPath=wrapper/dists
+            distributionUrl=https\\://services.gradle.org/distributions/gradle-8.10-bin.zip
+            zipStoreBase=GRADLE_USER_HOME
+            zipStorePath=wrapper/dists
+            EOF
+          fi
+
+          # Check gradle-wrapper.jar
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            echo "⬇️ Downloading gradle-wrapper.jar..."
+            curl -sSL https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar || \
+            curl -sSL https://services.gradle.org/distributions/gradle-8.10-bin.zip -o gradle-8.10-bin.zip && unzip -j gradle-8.10-bin.zip "*/gradle-wrapper.jar" -d gradle/wrapper || \
+            echo "⚠️ Unable to download gradle-wrapper.jar automatically"
+          fi
+
+          chmod +x gradlew
+          echo "✅ Gradle wrapper ready!"
+
+      - name: 🧱 Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.10
           cache-read-only: false
-
-      - name: 🧩 Ensure Gradle Wrapper Exists
-        run: |
-          if [ ! -f gradlew ]; then
-            echo "gradlew missing — generating wrapper..."
-            gradle wrapper --gradle-version 8.10
-          fi
-          chmod +x gradlew
-          echo "✅ Gradle wrapper ready."
 
       - name: 🏗️ Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
@@ -42,9 +81,8 @@ jobs:
       - name: 🧪 Run Unit Tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: 📦 Upload Debug APK
+      - name: 📦 Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FocusApp-Debug
+          name: FocusApp-v4-Debug
           path: app/build/outputs/apk/debug/*.apk
-
