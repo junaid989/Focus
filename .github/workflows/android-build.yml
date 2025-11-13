@@ -1,54 +1,43 @@
 name: Build Focus App
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
-      # 🧾 Step 1 — Checkout repository
-      - name: Checkout repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      # 🧩 Step 2 — Ensure Gradle Wrapper Jar Exists and is Valid
-      - name: Ensure Gradle Wrapper Jar Exists
-        run: |
-          mkdir -p gradle/wrapper
-          echo "Checking gradle-wrapper.jar..."
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "Downloading Gradle Wrapper JAR..."
-            curl -L -o gradle/wrapper/gradle-wrapper.jar \
-              https://raw.githubusercontent.com/gradle/gradle/master/subprojects/wrapper/src/main/resources/gradle/wrapper/gradle-wrapper.jar
-          fi
-          ls -lh gradle/wrapper/
-          file gradle/wrapper/gradle-wrapper.jar
-
-      # ⚙️ Step 3 — Make gradlew script executable
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
-      # ☕ Step 4 — Setup Java environment
-      - name: Set up JDK 17
+      - name: 🧱 Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          distribution: temurin
+          java-version: 17
 
-      # 🧹 Step 5 — Clean project before building
-      - name: Clean build cache
-        run: ./gradlew clean || true
-
-      # 🏗 Step 6 — Build Debug APK
-      - name: Build Debug APK (v4)
+      - name: ⚙️ Ensure Gradle Wrapper Jar Exists
         run: |
-          echo "🚀 Building Focus App v4..."
-          ./gradlew assembleDebug --stacktrace
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            echo "⬇️ Downloading gradle-wrapper.jar for Gradle 8.10..."
+            curl -L -o gradle/wrapper/gradle-wrapper.jar \
+              https://raw.githubusercontent.com/gradle/gradle/v8.10/subprojects/wrapper/src/main/resources/gradle/wrapper/gradle-wrapper.jar
+          fi
 
-      # 📦 Step 7 — Upload APK (for mobile download)
-      - name: Upload APK
+      - name: 🧹 Grant Execute Permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 🚀 Build Focus App v4
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: 📦 Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Focus-App
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Focus-App-v4
+          path: app/build/outputs/apk/debug/*.apk
