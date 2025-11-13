@@ -1,11 +1,11 @@
 name: Focus
 
 on:
-  workflow_dispatch: # run manually
+  workflow_dispatch: # Manual trigger
 
 jobs:
   build:
-    name: Build Android Project
+    name: Build Focus Android App
     runs-on: ubuntu-latest
 
     steps:
@@ -18,36 +18,32 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: ⚙️ Verify Gradle Wrapper
+      - name: ⚙️ Verify and Repair Gradle Wrapper
         run: |
           echo "🔍 Checking Gradle wrapper files..."
 
-          # Ensure wrapper directory exists
           mkdir -p gradle/wrapper
 
-          # Detect Gradle version from gradle-wrapper.properties
+          # Detect Gradle version
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             GRADLE_VERSION=$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-\(.*\)-bin.zip/\1/')
             echo "📦 Detected Gradle version: $GRADLE_VERSION"
           else
-            echo "⚠️ gradle-wrapper.properties not found, using Gradle 8.10"
+            echo "⚠️ gradle-wrapper.properties not found, defaulting to 8.10"
             GRADLE_VERSION=8.10
           fi
 
-          # Download correct gradle-wrapper.jar from Gradle repo
+          # If wrapper jar is missing or corrupted, fix it
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⬇️ gradle-wrapper.jar missing! Downloading version $GRADLE_VERSION ..."
-            curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
-              "https://repo.gradle.org/gradle/libs-releases-local/org/gradle/gradle-wrapper/$GRADLE_VERSION/gradle-wrapper-$GRADLE_VERSION.jar"
-          fi
-
-          if [ ! -f "./gradlew" ]; then
-            echo "⚠️ gradlew script missing — generating..."
-            gradle wrapper --gradle-version "$GRADLE_VERSION"
+            echo "⬇️ gradle-wrapper.jar missing! Extracting from Gradle distribution..."
+            curl -sSL -o gradle.zip "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip"
+            unzip -q gradle.zip -d gradle_dist
+            find gradle_dist -name "gradle-wrapper.jar" -exec cp {} gradle/wrapper/gradle-wrapper.jar \;
+            echo "✅ gradle-wrapper.jar restored successfully."
           fi
 
           chmod +x gradlew
-          echo "✅ Gradle wrapper setup complete."
+          echo "✅ Gradle wrapper verification complete."
 
       - name: 🏗️ Build APK
         run: ./gradlew assembleDebug --stacktrace
@@ -60,4 +56,3 @@ jobs:
         with:
           name: Focus-v4-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-
