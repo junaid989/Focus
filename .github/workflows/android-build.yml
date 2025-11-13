@@ -26,8 +26,9 @@ jobs:
           mkdir -p gradle/wrapper
           echo "⬇️ Downloading verified Gradle 8.10 wrapper jar..."
           curl -L -o gradle-8.10-bin.zip https://services.gradle.org/distributions/gradle-8.10-bin.zip
-          unzip -p gradle-8.10-bin.zip gradle-8.10/lib/gradle-wrapper.jar > gradle/wrapper/gradle-wrapper.jar
+          unzip -p gradle-8.10-bin.zip gradle-8.10/lib/plugins/gradle-wrapper.jar > gradle/wrapper/gradle-wrapper.jar
           rm gradle-8.10-bin.zip
+          ls -lh gradle/wrapper
           echo "✅ gradle-wrapper.jar extracted successfully."
 
       - name: 🧹 Grant Execute Permission for gradlew
