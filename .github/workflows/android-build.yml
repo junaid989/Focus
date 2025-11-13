@@ -21,7 +21,6 @@ jobs:
       - name: ⚙️ Verify & Fix Gradle Wrapper
         run: |
           echo "🔍 Checking Gradle wrapper files..."
-
           mkdir -p gradle/wrapper
 
           # Detect version or default to 8.10
@@ -33,20 +32,25 @@ jobs:
             GRADLE_VERSION=8.10
           fi
 
-          # If gradle-wrapper.jar missing, fetch it directly from Gradle’s repo
+          # Check for existing wrapper JAR
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⬇️ gradle-wrapper.jar missing! Fetching from Gradle source..."
+            echo "⬇️ gradle-wrapper.jar missing! Fetching official compiled binary..."
             curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
-              "https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}/subprojects/wrapper/src/main/resources/gradle/wrapper/gradle-wrapper.jar"
-            
-            if [ -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-              echo "✅ gradle-wrapper.jar downloaded successfully."
-            else
-              echo "❌ Failed to fetch gradle-wrapper.jar — check version or URL."
-              exit 1
+              "https://repo.gradle.org/gradle/libs-releases-local/org/gradle/gradle-wrapper/${GRADLE_VERSION}/gradle-wrapper-${GRADLE_VERSION}.jar"
+
+            # If 404, fallback to default working version (8.7)
+            if [ ! -s "gradle/wrapper/gradle-wrapper.jar" ]; then
+              echo "⚠️ Failed for version ${GRADLE_VERSION}, falling back to 8.7"
+              curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
+                "https://repo.gradle.org/gradle/libs-releases-local/org/gradle/gradle-wrapper/8.7/gradle-wrapper-8.7.jar"
             fi
+          fi
+
+          if [ -s "gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "✅ gradle-wrapper.jar ready."
           else
-            echo "✅ gradle-wrapper.jar already exists."
+            echo "❌ Failed to download gradle-wrapper.jar"
+            exit 1
           fi
 
           chmod +x gradlew
