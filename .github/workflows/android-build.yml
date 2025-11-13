@@ -18,18 +18,27 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
+      - name: ⚡ Cache Gradle Files
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: ⚙️ Verify & Auto-Fix Gradle Wrapper
         run: |
           echo "🔍 Checking Gradle wrapper files..."
           mkdir -p gradle/wrapper
 
-          # Detect Gradle version or set default
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             GRADLE_VERSION=$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-\(.*\)-bin.zip/\1/')
             echo "📦 Detected Gradle version: $GRADLE_VERSION"
           else
             GRADLE_VERSION=8.10
-            echo "⚠️ gradle-wrapper.properties missing — creating for $GRADLE_VERSION"
+            echo "⚠️ Missing gradle-wrapper.properties — creating new one for Gradle $GRADLE_VERSION"
             cat > gradle/wrapper/gradle-wrapper.properties <<EOF
 distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
@@ -39,40 +48,8 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
 EOF
           fi
 
-          # Try 8.10 first — fall back to 8.9 if needed
           echo "⬇️ Ensuring gradle-wrapper.jar..."
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "➡️ Attempting to fetch gradle-wrapper.jar for ${GRADLE_VERSION}..."
+            echo "➡️ Fetching Gradle wrapper jar for ${GRADLE_VERSION}..."
             curl -L -o gradle/wrapper/gradle-wrapper.jar \
-              https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}/subprojects/wrapper/src/main/resources/gradle-wrapper.jar || true
-          fi
-
-          if [ ! -s "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⚠️ gradle-wrapper.jar for ${GRADLE_VERSION} failed — trying Gradle 8.9..."
-            curl -L -o gradle/wrapper/gradle-wrapper.jar \
-              https://raw.githubusercontent.com/gradle/gradle/v8.9/subprojects/wrapper/src/main/resources/gradle-wrapper.jar
-            sed -i 's/8\.10/8.9/' gradle/wrapper/gradle-wrapper.properties
-            echo "🔁 Switched to Gradle 8.9."
-          fi
-
-          if [ -s "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "✅ gradle-wrapper.jar ready!"
-          else
-            echo "❌ Could not obtain gradle-wrapper.jar."
-            exit 1
-          fi
-
-          chmod +x gradlew
-          echo "✅ Gradle wrapper verification complete."
-
-      - name: 🏗️ Build APK
-        run: ./gradlew assembleDebug --stacktrace
-
-      - name: 🧪 Run Unit Tests
-        run: ./gradlew testDebugUnitTest --stacktrace
-
-      - name: 📦 Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Focus-v5-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+              https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}/subprojects/wrapper/src/main/resources/gradle-wrap_
