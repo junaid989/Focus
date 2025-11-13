@@ -26,8 +26,14 @@ jobs:
           mkdir -p gradle/wrapper
           echo "⬇️ Downloading verified Gradle 8.10 wrapper jar..."
           curl -L -o gradle-8.10-bin.zip https://services.gradle.org/distributions/gradle-8.10-bin.zip
-          unzip -p gradle-8.10-bin.zip gradle-8.10/lib/plugins/gradle-wrapper.jar > gradle/wrapper/gradle-wrapper.jar
-          rm gradle-8.10-bin.zip
+          unzip gradle-8.10-bin.zip -d gradle-temp
+          WRAPPER_PATH=$(find gradle-temp -type f -name "gradle-wrapper.jar" | head -n 1)
+          if [ -z "$WRAPPER_PATH" ]; then
+            echo "❌ gradle-wrapper.jar not found!"
+            exit 1
+          fi
+          cp "$WRAPPER_PATH" gradle/wrapper/gradle-wrapper.jar
+          rm -rf gradle-8.10-bin.zip gradle-temp
           ls -lh gradle/wrapper
           echo "✅ gradle-wrapper.jar extracted successfully."
 
