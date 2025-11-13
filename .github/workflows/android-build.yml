@@ -1,7 +1,7 @@
 name: Focus
 
 on:
-  workflow_dispatch: # Manual run only
+  workflow_dispatch:
 
 jobs:
   build:
@@ -33,19 +33,18 @@ jobs:
             GRADLE_VERSION=8.10
           fi
 
-          # If the wrapper jar is missing, repair it
+          # If gradle-wrapper.jar missing, fetch it directly from Gradle’s repo
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⬇️ gradle-wrapper.jar missing! Downloading Gradle $GRADLE_VERSION..."
-            curl -sSL -o gradle.zip "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip"
-            unzip -q gradle.zip -d gradle_dist
-            echo "🔍 Searching for gradle-wrapper.jar..."
-            FOUND=$(find gradle_dist -type f -name "gradle-wrapper.jar" | head -n 1)
-            if [ -z "$FOUND" ]; then
-              echo "❌ gradle-wrapper.jar not found in Gradle distribution!"
+            echo "⬇️ gradle-wrapper.jar missing! Fetching from Gradle source..."
+            curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
+              "https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}/subprojects/wrapper/src/main/resources/gradle/wrapper/gradle-wrapper.jar"
+            
+            if [ -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+              echo "✅ gradle-wrapper.jar downloaded successfully."
+            else
+              echo "❌ Failed to fetch gradle-wrapper.jar — check version or URL."
               exit 1
             fi
-            cp "$FOUND" gradle/wrapper/gradle-wrapper.jar
-            echo "✅ gradle-wrapper.jar restored successfully."
           else
             echo "✅ gradle-wrapper.jar already exists."
           fi
@@ -64,3 +63,4 @@ jobs:
         with:
           name: Focus-v4-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
