@@ -18,42 +18,47 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: ⚙️ Verify & Fix Gradle Wrapper
+      - name: ⚙️ Verify & Auto-Fix Gradle Wrapper
         run: |
           echo "🔍 Checking Gradle wrapper files..."
           mkdir -p gradle/wrapper
 
-          # Detect Gradle version
+          # Detect Gradle version or set default
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             GRADLE_VERSION=$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-\(.*\)-bin.zip/\1/')
             echo "📦 Detected Gradle version: $GRADLE_VERSION"
           else
-            echo "⚠️ gradle-wrapper.properties not found, defaulting to 8.10"
             GRADLE_VERSION=8.10
+            echo "⚠️ gradle-wrapper.properties missing — creating for $GRADLE_VERSION"
+            cat > gradle/wrapper/gradle-wrapper.properties <<EOF
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip
+EOF
           fi
 
-          # Download and extract wrapper jar if missing
+          # Try 8.10 first — fall back to 8.9 if needed
+          echo "⬇️ Ensuring gradle-wrapper.jar..."
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "⬇️ gradle-wrapper.jar missing! Downloading Gradle ${GRADLE_VERSION}..."
-            curl -sSL -o gradle-${GRADLE_VERSION}-bin.zip \
-              https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip
+            echo "➡️ Attempting to fetch gradle-wrapper.jar for ${GRADLE_VERSION}..."
+            curl -L -o gradle/wrapper/gradle-wrapper.jar \
+              https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}/subprojects/wrapper/src/main/resources/gradle-wrapper.jar || true
+          fi
 
-            echo "📂 Searching for gradle-wrapper.jar inside the zip..."
-            JAR_PATH=$(unzip -l gradle-${GRADLE_VERSION}-bin.zip | grep "gradle-wrapper.jar" | awk '{print $4}' | head -n 1)
-
-            if [ -z "$JAR_PATH" ]; then
-              echo "❌ gradle-wrapper.jar not found in Gradle distribution!"
-              exit 1
-            fi
-
-            echo "📦 Found wrapper jar at: $JAR_PATH"
-            unzip -j gradle-${GRADLE_VERSION}-bin.zip "$JAR_PATH" -d gradle/wrapper
+          if [ ! -s "gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "⚠️ gradle-wrapper.jar for ${GRADLE_VERSION} failed — trying Gradle 8.9..."
+            curl -L -o gradle/wrapper/gradle-wrapper.jar \
+              https://raw.githubusercontent.com/gradle/gradle/v8.9/subprojects/wrapper/src/main/resources/gradle-wrapper.jar
+            sed -i 's/8\.10/8.9/' gradle/wrapper/gradle-wrapper.properties
+            echo "🔁 Switched to Gradle 8.9."
           fi
 
           if [ -s "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "✅ gradle-wrapper.jar ready."
+            echo "✅ gradle-wrapper.jar ready!"
           else
-            echo "❌ gradle-wrapper.jar failed to create!"
+            echo "❌ Could not obtain gradle-wrapper.jar."
             exit 1
           fi
 
@@ -71,4 +76,3 @@ jobs:
         with:
           name: Focus-v5-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-
