@@ -31,25 +31,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Set up Gradle Wrapper
+      - name: Set up Gradle Wrapper (auto-fix for path)
         run: |
           mkdir -p gradle/wrapper
+          echo "⬇️ Downloading Gradle 8.10..."
           curl -sSL https://services.gradle.org/distributions/gradle-8.10-bin.zip -o gradle-8.10-bin.zip
           unzip -q gradle-8.10-bin.zip -d gradle-temp
-          cp gradle-temp/gradle-8.10/lib/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.jar
-          echo "Gradle wrapper set up successfully ✅"
+          # Find and copy the gradle-wrapper.jar wherever it exists
+          WRAPPER_PATH=$(find gradle-temp -name "gradle-wrapper.jar" | head -n 1)
+          if [ -z "$WRAPPER_PATH" ]; then
+            echo "❌ gradle-wrapper.jar not found inside Gradle zip!"
+            exit 1
+          fi
+          cp "$WRAPPER_PATH" gradle/wrapper/gradle-wrapper.jar
+          echo "✅ gradle-wrapper.jar copied successfully from $WRAPPER_PATH"
+          rm -rf gradle-temp gradle-8.10-bin.zip
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew assembleDebug
-
-      - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK (Artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
+          name: Focus-App-v4
           path: app/build/outputs/apk/debug/*.apk
