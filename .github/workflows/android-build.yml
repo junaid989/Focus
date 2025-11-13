@@ -21,27 +21,28 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: ⚙️ Set up Gradle (New Official Action)
+      - name: ⚙️ Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.10
           cache-read-only: false
 
-      - name: 🧱 Generate Wrapper (if missing)
+      - name: 🧩 Ensure Gradle Wrapper Exists
         run: |
           if [ ! -f gradlew ]; then
-            echo "gradlew not found — generating wrapper..."
+            echo "gradlew missing — generating wrapper..."
             gradle wrapper --gradle-version 8.10
           fi
           chmod +x gradlew
+          echo "✅ Gradle wrapper ready."
 
-      - name: 🚀 Build Debug APK
+      - name: 🏗️ Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
       - name: 🧪 Run Unit Tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: 📦 Upload Debug APK Artifact
+      - name: 📦 Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: FocusApp-Debug
