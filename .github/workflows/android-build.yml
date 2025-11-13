@@ -12,40 +12,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: ☕ Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: 17
 
-      - name: Cache Gradle files
-        uses: actions/cache@v4
+      - name: ⚡ Install Gradle 8.10
+        uses: gradle/gradle-build-action@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          gradle-version: 8.10
 
-      - name: Set up Gradle Wrapper (direct from Maven Central)
+      - name: 🔧 Generate Gradle Wrapper (if missing)
         run: |
-          mkdir -p gradle/wrapper
-          echo "⬇️ Downloading verified Gradle 8.10 wrapper jar from Maven Central..."
-          curl -sSL https://repo1.maven.org/maven2/org/gradle/gradle-wrapper/8.10/gradle-wrapper-8.10.jar -o gradle/wrapper/gradle-wrapper.jar
-          echo "✅ gradle-wrapper.jar downloaded successfully!"
+          if [ ! -f gradlew ]; then
+            echo "gradlew not found — generating new Gradle wrapper..."
+            gradle wrapper --gradle-version 8.10
+          fi
+          chmod +x gradlew
+          echo "✅ Gradle wrapper ready."
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build with Gradle
+      - name: 🚀 Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Upload APK (Artifact)
+      - name: 📦 Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Focus-App-v4
           path: app/build/outputs/apk/debug/*.apk
+
