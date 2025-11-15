@@ -2,46 +2,35 @@ name: Android Build
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # ---------------------------
-      # 1) Checkout repo
-      # ---------------------------
-      - name: 📥 Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # ---------------------------
-      # 2) Setup JDK
-      # ---------------------------
-      - name: ☕ Setup JDK 17
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
 
-      # ---------------------------
-      # 3) Make Gradle executable
-      # ---------------------------
-      - name: 🔨 Set execute permission for gradlew
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # ---------------------------
-      # 4) Build Debug APK
-      # ---------------------------
-      - name: 🛠️ Build Debug APK
+      - name: Build APK
         run: ./gradlew assembleDebug --stacktrace
 
-      # ---------------------------
-      # 5) Upload APK artifact
-      # ---------------------------
-      - name: 📤 Upload APK
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: Focus-App-APK
+          name: debug-apk
           path: app/build/outputs/apk/debug/*.apk
-          retention-days: 7
-
