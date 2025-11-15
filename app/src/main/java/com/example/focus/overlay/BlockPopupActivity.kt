@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.airbnb.lottie.LottieAnimationView
 import com.example.focus.R
 
+
+
 class BlockPopupActivity : AppCompatActivity() {
     private var player: MediaPlayer? = null
     override fun onCreate(savedInstanceState: Bundle?) {
