@@ -1,18 +1,46 @@
-import com.example.focus.R
-
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp"
-    android:gravity="center"
-    android:orientation="vertical">
+    tools:context=".SettingsActivity">
 
+    <!-- Title -->
     <TextView
-        android:id="@+id/txtSettings"
-        android:text="Settings"
-        android:textSize="24sp"
+        android:id="@+id/settingsTitle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="Settings"
+        android:textStyle="bold"
+        android:textSize="26sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp" />
 
-</LinearLayout>
+    <!-- Example Switch -->
+    <Switch
+        android:id="@+id/exampleSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enable Feature"
+        android:textSize="18sp"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/settingsTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Save Button -->
+    <Button
+        android:id="@+id/saveSettingsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@id/exampleSwitch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
