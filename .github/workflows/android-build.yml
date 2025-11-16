@@ -11,6 +11,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      JAVA_TOOL_OPTIONS: "-Dorg.gradle.jvmargs=-Xmx2g"
+      GRADLE_OPTS: "-Dorg.gradle.logging.level=INFO"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,9 +24,7 @@ jobs:
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
             echo "Downloading gradle-wrapper.jar..."
             mkdir -p gradle/wrapper
-            curl -L \
-              https://services.gradle.org/distributions/gradle-8.9-bin.zip \
-              -o gradle-8.9-bin.zip
+            curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o gradle-8.9-bin.zip
             unzip gradle-8.9-bin.zip
             cp gradle-8.9/lib/gradle-wrapper.jar gradle/wrapper/
           fi
@@ -36,8 +38,8 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: Build APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build APK (Debug)
+        run: ./gradlew assembleDebug --stacktrace --info --debug
 
       - name: Upload APK (Artifact v4)
         uses: actions/upload-artifact@v4
@@ -45,8 +47,3 @@ jobs:
           name: Focus-v4
           path: app/build/outputs/apk/debug/*.apk
           compression-level: 6
-
-          env:
-  JAVA_TOOL_OPTIONS: "-Dorg.gradle.jvmargs=-Xmx2g"
-  GRADLE_OPTS: "-Dorg.gradle.logging.level=INFO"
-
