@@ -45,3 +45,8 @@ jobs:
           name: Focus-v4
           path: app/build/outputs/apk/debug/*.apk
           compression-level: 6
+
+          env:
+  JAVA_TOOL_OPTIONS: "-Dorg.gradle.jvmargs=-Xmx2g"
+  GRADLE_OPTS: "-Dorg.gradle.logging.level=INFO"
+
