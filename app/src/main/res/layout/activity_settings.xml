@@ -39,14 +39,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Save Settings"
-            android:marginTop="20dp" />
+            android:layout_marginTop="20dp" />
 
         <Button
             android:id="@+id/btnSetPin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Set PIN"
-            android:marginTop="10dp" />
+            android:layout_marginTop="10dp" />
 
     </LinearLayout>
 </ScrollView>
