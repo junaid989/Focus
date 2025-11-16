@@ -13,7 +13,7 @@ jobs:
 
     env:
       JAVA_TOOL_OPTIONS: "-Dorg.gradle.jvmargs=-Xmx2g"
-      GRADLE_OPTS: "-Dorg.gradle.logging.level=INFO"
+      GRADLE_OPTS: "-Dorg.gradle.logging.level=WARN"
 
     steps:
       - name: Checkout
@@ -25,21 +25,30 @@ jobs:
             echo "Downloading gradle-wrapper.jar..."
             mkdir -p gradle/wrapper
             curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o gradle-8.9-bin.zip
-            unzip gradle-8.9-bin.zip
+            unzip -q gradle-8.9-bin.zip
             cp gradle-8.9/lib/gradle-wrapper.jar gradle/wrapper/
           fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: Build APK (Debug)
-        run: ./gradlew assembleDebug --stacktrace --info --debug
+      - name: Build APK (short errors only)
+        run: |
+          set +e
+          ./gradlew assembleDebug --quiet
+          EXIT_CODE=$?
+          echo ""
+          echo "========== SHORT ERROR REPORT =========="
+          echo ""
+          grep -R "ERROR" -n app/build/outputs || true
+          echo ""
+          exit $EXIT_CODE
 
       - name: Upload APK (Artifact v4)
         uses: actions/upload-artifact@v4
