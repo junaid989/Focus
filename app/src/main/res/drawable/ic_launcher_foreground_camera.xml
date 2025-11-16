@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer rounded camera body (white) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M18,30 L90,30 C94.418,30 98,33.582 98,38 L98,70 C98,74.418 94.418,78 90,78 L18,78 C13.582,78 10,74.418 10,70 L10,38 C10,33.582 13.582,30 18,30 Z" />
+
+    <!-- Top camera lens circle -->
+    <path
+        android:fillColor="#FF7F00"  <!-- small accent - will be hidden, main lens below -->
+        android:pathData="M36,36h12v6H36z" android:alpha="0"/>
+
+    <!-- Big lens (ring) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF6F00"
+        android:strokeWidth="6"
+        android:pathData="M54,54 m -14,0 a 14,14 0 1,0 28,0 a 14,14 0 1,0 -28,0" android:alpha="0.95"/>
+
+    <!-- Fill lens center white -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,54 m -8,0 a 8,8 0 1,0 16,0 a 8,8 0 1,0 -16,0" />
+
+</vector>
