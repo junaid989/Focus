@@ -1,7 +1,7 @@
 name: Android Build
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # Manual trigger
   push:
     branches: [ "main" ]
   pull_request:
@@ -16,32 +16,48 @@ jobs:
       GRADLE_OPTS: "-Dorg.gradle.logging.level=WARN"
 
     steps:
+      # 1. Checkout code
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ensure gradle-wrapper.jar exists
+      # 2. Ensure gradle-wrapper.jar exists
+      - name: Ensure Gradle Wrapper
         run: |
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
             echo "Downloading gradle-wrapper.jar..."
             mkdir -p gradle/wrapper
-            curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o gradle-8.9-bin.zip
-            unzip -q gradle-8.9-bin.zip
-            cp gradle-8.9/lib/gradle-wrapper.jar gradle/wrapper/
+            curl -L https://services.gradle.org/distributions/gradle-8.10-bin.zip -o gradle-8.10-bin.zip
+            unzip -q gradle-8.10-bin.zip
+            cp gradle-8.10/lib/gradle-wrapper.jar gradle/wrapper/
           fi
 
+      # 3. Set up JDK 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
+      # 4. Cache Gradle dependencies (optional but faster)
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper/
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # 5. Make Gradle wrapper executable
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: Build APK (short errors only)
+      # 6. Clean & assemble debug APK
+      - name: Build Debug APK (short errors)
         run: |
           set +e
-          ./gradlew assembleDebug --quiet
+          ./gradlew clean assembleDebug --quiet
           EXIT_CODE=$?
           echo ""
           echo "========== SHORT ERROR REPORT =========="
@@ -50,9 +66,10 @@ jobs:
           echo ""
           exit $EXIT_CODE
 
-      - name: Upload APK (Artifact v4)
+      # 7. Upload APK as artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Focus-v4
+          name: Focus-Debug-APK
           path: app/build/outputs/apk/debug/*.apk
           compression-level: 6
