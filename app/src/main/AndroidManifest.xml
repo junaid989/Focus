@@ -1,8 +1,44 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.focus">
+
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.Focus">
+        android:theme="@style/Theme.Focus"
+        android:supportsRtl="true">
+
+        <!-- MAIN ACTIVITY (shows app icon + launcher) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Accessibility service -->
+        <service
+            android:name=".accessibility.FocusAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_config" />
+        </service>
+
+        <!-- Overlay popup activity -->
+        <activity
+            android:name=".overlay.BlockPopupActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Focus.Transparent" />
     </application>
+
+    <!-- Overlay permission -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+
 </manifest>
