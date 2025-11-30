@@ -1,17 +1,20 @@
+
+ <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.focus">
 
-    <!-- Permissions -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:theme="@style/Theme.Focus"
-        android:supportsRtl="true">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Focus">
 
-        <!-- MAIN ACTIVITY (shows launcher icon) -->
+        <!-- MAIN ACTIVITY (shows icon + allows opening the app) -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -21,27 +24,26 @@
             </intent-filter>
         </activity>
 
-        <!-- Accessibility Service -->
+        <!-- BLOCKER ACTIVITY -->
+        <activity
+            android:name=".BlockActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Focus.Transparent"/>
+
+        <!-- ACCESSIBILITY SERVICE -->
         <service
-            android:name=".accessibility.FocusAccessibilityService"
-            android:exported="false"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            android:name=".FocusService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
 
             <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
             </intent-filter>
 
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_config" />
+                android:resource="@xml/accessibility_config"/>
         </service>
-
-        <!-- Blocking Overlay Popup -->
-        <activity
-            android:name=".overlay.BlockPopupActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Focus" />
-            <!-- Removed: @style/Theme.Focus.Transparent (does not exist) -->
 
     </application>
 
